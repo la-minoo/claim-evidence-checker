@@ -506,7 +506,7 @@ async function checkHealth() {
   const pip   = document.getElementById('health-pip');
   const label = document.getElementById('health-label');
   try {
-    const r = await fetch('http://localhost:8000/health', { signal: AbortSignal.timeout(3000) });
+    const r = await fetch('https://minoola-claim-ai.hf.space/health', { signal: AbortSignal.timeout(3000) });
     if (r.ok) {
       pip.classList.add('ok');
       label.textContent = 'backend online';
