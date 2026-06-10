@@ -1,0 +1,25 @@
+# clAIm — backend dependencies for Render deployment
+# Generated from src/ imports across infer.py, retrieval.py, attributions.py, llama_chat.py
+
+# Core ML
+torch==2.3.1+cpu
+transformers==4.44.0
+safetensors
+
+# XAI
+captum
+
+# NLP / tokenisation
+nltk
+sentencepiece
+
+# API framework
+fastapi
+uvicorn[standard]
+pydantic
+
+# HTTP
+requests
+
+# Utilities
+accelerate
