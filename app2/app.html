@@ -1458,6 +1458,14 @@ async function runMode1() {
   const results = document.getElementById("m1-results");
   results.classList.add("hidden");
   results.innerHTML = "";
+  // Reset chat state for new analysis
+  ["reasoning", "science"].forEach(panelId => {
+    if (window["__chat_" + panelId]) {
+      window["__chat_" + panelId].history = [];
+      const log = document.getElementById(`chat-log-${panelId}`);
+      if (log) log.innerHTML = '';
+    }
+  });
   await runFullPipeline(claim, evidence, results);
   setLoading("m1-submit", false);
 }
@@ -1558,6 +1566,14 @@ async function analyseCard(i) {
   // Show and reset the analysis panel
   panel.classList.remove("hidden");
   panel.style.cssText = "margin-top:24px;padding-top:20px;border-top:1px solid var(--border2);";
+  // Reset chat state for new analysis
+  ["reasoning", "science"].forEach(panelId => {
+    if (window["__chat_" + panelId]) {
+      window["__chat_" + panelId].history = [];
+      const log = document.getElementById(`chat-log-${panelId}`);
+      if (log) log.innerHTML = '';
+    }
+  });
   panel.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">
     Analysing — <span style="color:var(--text2);">${escapeHtml(p.paper_title)}</span>
   </div>`;
