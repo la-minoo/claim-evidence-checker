@@ -97,7 +97,11 @@ app = FastAPI(title="Claim-Evidence Checker", version="2.0")
 # Must be added BEFORE routes are declared
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "https://claimai-sepia.vercel.app",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
