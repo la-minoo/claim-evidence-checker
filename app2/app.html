@@ -941,7 +941,7 @@ textarea::placeholder, input::placeholder { color: var(--text3); }
         <tr><td>Model</td><td>DeBERTa-v3-base</td></tr>
         <tr><td>Train</td><td>MultiNLI → SciFact</td></tr>
         <tr><td>XAI</td><td>IntGrad N=25</td></tr>
-        <tr><td>LLM</td><td>Phi3 / Ollama</td></tr>
+        <tr><td>LLM</td><td>Llama-3.1 / Groq</td></tr>
         <tr><td>RAG</td><td>Semantic Scholar</td></tr>
       </table>
     </div>
@@ -1219,11 +1219,11 @@ function renderAttributionPanel(tokens, skipSet) {
 function renderPhi3Panels(reasoning, science) {
   return `
     <div class="phi3-panel reasoning fade-in">
-      <div class="phi3-panel-header">🧠 Model reasoning</div>
+      <div class="phi3-panel-header">🧠 Model Reasoning</div>
       ${escapeHtml(reasoning)}
     </div>
     <div class="phi3-panel science fade-in">
-      <div class="phi3-panel-header">🔬 Scientific explanation</div>
+      <div class="phi3-panel-header">🔬 Scientific Explanation</div>
       ${escapeHtml(science)}
     </div>`;
 }
@@ -1277,7 +1277,7 @@ async function sendChat(panelId, messagesId, inputId) {
   inputEl.value = "";
 
   messagesEl.innerHTML += `<div class="chat-bubble user">${escapeHtml(message)}</div>`;
-  messagesEl.innerHTML += `<div class="chat-bubble thinking" id="${panelId}-thinking">Phi3 is thinking…</div>`;
+  messagesEl.innerHTML += `<div class="chat-bubble thinking" id="${panelId}-thinking">Llama-3.1 is thinking…</div>`;
   messagesEl.scrollTop = messagesEl.scrollHeight;
 
   try {
@@ -1352,8 +1352,8 @@ async function runFullPipeline(claim, evidenceText, container) {
     html += `<div id="attr-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> running integrated gradients…</div>`;
   }
 
-  html += `<div id="phi3-reasoning-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> phi3 — model reasoning…</div>`;
-  html += `<div id="phi3-science-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> phi3 — scientific explanation…</div>`;
+  html += `<div id="phi3-reasoning-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> Llama-3.1 — model reasoning…</div>`;
+  html += `<div id="phi3-science-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> Llama-3.1 — scientific explanation…</div>`;
 
   container.innerHTML = html;
   container.classList.remove("hidden");
@@ -1412,7 +1412,7 @@ async function runFullPipeline(claim, evidenceText, container) {
     const d4 = await r4.json();
     modelReasoning = d4.response || "";
     const p4 = document.getElementById("phi3-reasoning-placeholder");
-    if (p4) p4.outerHTML = `<div class="phi3-panel reasoning fade-in"><div class="phi3-panel-header">🧠 Model reasoning</div>${escapeHtml(modelReasoning)}</div>`;
+    if (p4) p4.outerHTML = `<div class="phi3-panel reasoning fade-in"><div class="phi3-panel-header">🧠 Model Reasoning</div>${escapeHtml(modelReasoning)}</div>`;
   } catch(e) {
     const p = document.getElementById("phi3-reasoning-placeholder");
     if (p) p.outerHTML = `<div style="color:var(--text3);font-family:var(--mono);font-size:11px;margin:8px 0;">model reasoning unavailable</div>`;
@@ -1428,7 +1428,7 @@ async function runFullPipeline(claim, evidenceText, container) {
     const d5 = await r5.json();
     scienceExplain = d5.response || "";
     const p5 = document.getElementById("phi3-science-placeholder");
-    if (p5) p5.outerHTML = `<div class="phi3-panel science fade-in"><div class="phi3-panel-header">🔬 Scientific explanation</div>${escapeHtml(scienceExplain)}</div>`;
+    if (p5) p5.outerHTML = `<div class="phi3-panel science fade-in"><div class="phi3-panel-header">🔬 Scientific Explanation</div>${escapeHtml(scienceExplain)}</div>`;
   } catch(e) {
     const p = document.getElementById("phi3-science-placeholder");
     if (p) p.outerHTML = `<div style="color:var(--text3);font-family:var(--mono);font-size:11px;margin:8px 0;">scientific explanation unavailable</div>`;
