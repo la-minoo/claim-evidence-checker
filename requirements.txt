@@ -1,8 +1,7 @@
-# clAIm — backend dependencies for Render deployment
-# Generated from src/ imports across infer.py, retrieval.py, attributions.py, llama_chat.py
+# clAIm — backend dependencies
+# Note: torch is installed separately in Dockerfile with CPU-only index URL
 
 # Core ML
-torch==2.3.1+cpu
 transformers==4.44.0
 safetensors
 

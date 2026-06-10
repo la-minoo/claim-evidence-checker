@@ -8,8 +8,13 @@ Run with:
     conda activate claimcheck
     cd C:\\Users\\1\\buss305-project\\claim-evidence-checker
     python src\\main.py
+
+Port:
+    Local: 8000 (default)
+    HuggingFace Spaces: 7860 (set via PORT environment variable)
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -29,13 +34,16 @@ import retrieval  # noqa: F401
 if __name__ == "__main__":
     import uvicorn
 
+    # Read port from environment — 7860 for HF Spaces, 8000 locally
+    port = int(os.getenv("PORT", 8000))
+
     print("\n[main] All routes registered:")
     for route in app.routes:
         if hasattr(route, "methods"):
             print(f"  {list(route.methods)[0]:6s} {route.path}")
 
-    print("\n[main] Starting server on http://localhost:8000")
-    print("[main] Docs: http://localhost:8000/docs")
+    print(f"\n[main] Starting server on http://0.0.0.0:{port}")
+    print("[main] Docs: http://localhost:{port}/docs")
     print("[main] Press Ctrl+C to stop\n")
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=port)
