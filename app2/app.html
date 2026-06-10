@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ClaimCheck — Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #0a0c0e;
+  --bg2:        #0f1215;
+  --bg3:        #161b20;
+  --bg4:        #1c2228;
+  --border:     #1e252d;
+  --border2:    #28333d;
+  --text:       #e8edf2;
+  --text2:      #7a8a98;
+  --text3:      #3d4f5c;
+  --green:      #00e57a;
+  --red:        #ff4d6a;
+  --amber:      #ffb800;
+  --blue:       #3d9aff;
+  --support:    #00e57a;
+  --contradict: #ff4d6a;
+  --nei:        #ffb800;
+  --accent:     #00e57a;
+  --mono:       'IBM Plex Mono', monospace;
+  --sans:       'IBM Plex Sans', sans-serif;
+  --syne:       'Syne', sans-serif;
+  --radius:     6px;
+  --radius-lg:  10px;
+}
+
+[data-theme="light"] {
+  --bg:         #f4f1eb;
+  --bg2:        #edeae2;
+  --bg3:        #e4e0d6;
+  --bg4:        #dbd6cc;
+  --border:     #d0ccc0;
+  --border2:    #b8b2a4;
+  --text:       #1a1612;
+  --text2:      #5a5040;
+  --text3:      #9c8f7a;
+  --green:      #c8002a;
+  --red:        #c8002a;
+  --amber:      #a06800;
+  --blue:       #1a6fc4;
+  --support:    #008c4a;
+  --contradict: #c8002a;
+  --nei:        #a06800;
+  --accent:     #c8002a;
+}
+
+/* theme toggle */
+.theme-toggle {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 11px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.04em;
+}
+.theme-toggle:hover { border-color: var(--green); color: var(--green); }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* ── Layout ─────────────────────────────────────── */
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr 400px;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ────────────────────────────────────── */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sidebar-logo-mark {
+  width: 30px; height: 30px;
+  border: 1.5px solid var(--green);
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--green);
+  flex-shrink: 0;
+}
+.sidebar-logo-text {
+  font-family: var(--syne);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.sidebar-logo-sub {
+  font-size: 9px;
+  color: var(--text3);
+  font-family: var(--mono);
+  margin-top: 1px;
+  letter-spacing: 0.06em;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: color 0.15s;
+  margin-top: -8px;
+}
+.back-link:hover { color: var(--green); }
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+}
+
+.sidebar-section-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+/* mode buttons */
+.mode-btn {
+  width: 100%;
+  padding: 8px 11px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+  letter-spacing: 0.03em;
+}
+.mode-btn:hover { background: var(--bg3); color: var(--text); }
+.mode-btn.active {
+  background: var(--bg3);
+  border-color: var(--border2);
+  color: var(--text);
+}
+.mode-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--text3);
+  flex-shrink: 0;
+}
+.mode-btn.active .mode-dot {
+  background: var(--green);
+  box-shadow: 0 0 5px var(--green);
+}
+
+/* stack table */
+.stack-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.stack-table tr td {
+  padding: 4px 0;
+  font-size: 10px;
+  font-family: var(--mono);
+  vertical-align: top;
+}
+.stack-table tr td:first-child { color: var(--text3); width: 44%; letter-spacing: 0.04em; }
+.stack-table tr td:last-child { color: var(--text2); text-align: right; }
+
+/* health */
+.health-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.health-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+  flex-shrink: 0;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.health-dot.ok { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.health-dot.err { background: var(--red); }
+.health-label { font-family: var(--mono); font-size: 10px; color: var(--text3); letter-spacing: 0.04em; }
+
+/* ── Main ───────────────────────────────────────── */
+.main {
+  padding: 32px 36px;
+  max-width: 820px;
+  overflow-x: hidden;
+}
+
+/* page header */
+.page-header { margin-bottom: 28px; }
+.page-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 6px;
+}
+.page-title {
+  font-family: var(--syne);
+  font-weight: 700;
+  font-size: 26px;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.page-sub {
+  font-size: 12.5px;
+  color: var(--text2);
+  margin-top: 6px;
+  font-family: var(--mono);
+  line-height: 1.6;
+}
+
+/* ── Form ───────────────────────────────────────── */
+.field { margin-bottom: 14px; }
+.field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  margin-bottom: 7px;
+}
+textarea, input[type="text"] {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  padding: 10px 13px;
+  resize: vertical;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+textarea:focus, input[type="text"]:focus {
+  border-color: rgba(0,229,122,0.4);
+  box-shadow: 0 0 0 3px rgba(0,229,122,0.06);
+}
+textarea::placeholder, input::placeholder { color: var(--text3); }
+
+.btn-primary {
+  background: transparent;
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  padding: 9px 22px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--bg);
+}
+.btn-primary:active:not(:disabled) { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 13px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.btn-secondary:hover { border-color: var(--green); color: var(--green); }
+
+/* ── Divider ────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 22px 0;
+}
+
+/* ── Verdict banner ─────────────────────────────── */
+@keyframes verdictPulse {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.verdict-banner {
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  border: 1px solid;
+  animation: verdictPulse 0.4s ease forwards;
+  position: relative;
+  overflow: hidden;
+}
+.verdict-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, currentColor 0%, transparent 60%);
+  opacity: 0.03;
+  pointer-events: none;
+}
+.verdict-label {
+  font-family: var(--syne);
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+.verdict-conf-block { text-align: right; }
+.verdict-conf-num {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.verdict-conf-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ── Panel ──────────────────────────────────────── */
+.panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.panel-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+  margin-bottom: 14px;
+}
+
+/* ── Probability bars ───────────────────────────── */
+.prob-row { margin-bottom: 12px; }
+.prob-row:last-child { margin-bottom: 0; }
+.prob-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 5px;
+}
+.prob-lbl {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text2);
+}
+.prob-num {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+}
+.prob-track {
+  height: 3px;
+  background: var(--bg4);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prob-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Evidence panel ─────────────────────────────── */
+.evidence-quote {
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.75;
+  color: var(--text);
+  border-left: 2px solid var(--border2);
+  padding-left: 14px;
+  font-style: italic;
+  letter-spacing: 0.01em;
+}
+.evidence-supporting-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text3);
+  margin: 12px 0 6px;
+}
+.evidence-supporting-item {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  border-left: 1px solid var(--border);
+  padding-left: 12px;
+  margin-top: 5px;
+  line-height: 1.65;
+  font-style: italic;
+}
+
+/* ── Attribution overlay ────────────────────────── */
+.attribution-text {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 2.1;
+  letter-spacing: 0.01em;
+}
+.tok {
+  display: inline;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: 1px;
+  cursor: default;
+  transition: filter 0.15s;
+}
+.tok:hover { filter: brightness(1.4); }
+
+/* attribution table */
+.attr-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+.attr-table th {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  text-align: left;
+  padding: 0 8px 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.attr-table td {
+  padding: 6px 8px 6px 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.attr-table td:first-child {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.score-bar-wrap { display: flex; align-items: center; gap: 8px; }
+.score-bar-track {
+  flex: 1; height: 3px;
+  background: var(--bg4); border-radius: 2px; overflow: hidden;
+}
+.score-bar-fill { height: 100%; border-radius: 2px; }
+.score-val {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  white-space: nowrap;
+  min-width: 52px;
+  text-align: right;
+}
+.score-dir {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text3);
+  letter-spacing: 0.04em;
+}
+
+/* ── Phi3 panels ────────────────────────────────── */
+.phi3-panel {
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+}
+.phi3-panel.reasoning {
+  background: rgba(61,154,255,0.04);
+  border: 1px solid rgba(61,154,255,0.15);
+  color: #7aabdc;
+}
+.phi3-panel.science {
+  background: rgba(0,229,122,0.04);
+  border: 1px solid rgba(0,229,122,0.15);
+  color: #4aaa78;
+}
+[data-theme="light"] .phi3-panel.reasoning {
+  background: rgba(61,154,255,0.06);
+  border: 1px solid rgba(61,154,255,0.2);
+  color: #1a4f8a;
+}
+[data-theme="light"] .phi3-panel.science {
+  background: rgba(0,140,74,0.06);
+  border: 1px solid rgba(0,140,74,0.2);
+  color: #1a5c38;
+}
+.phi3-panel-header {
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0.55;
+}
+
+/* ── Paper cards ────────────────────────────────── */
+.paper-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid #d6ccbb;
+  border-left: 3px solid;
+  padding: 0;
+  margin-bottom: 14px;
+  background: #f7f3ec;
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.paper-card:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(0,0,0,0.22); }
+
+.paper-card-header {
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid #e0d9ce;
+}
+.paper-card-index {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: #9c8f7a;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.paper-card-title {
+  font-family: var(--syne);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #1a1612;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+.paper-card-authors {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #7a6f5e;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.paper-card-year {
+  background: #ede7da;
+  border: 1px solid #d6ccbb;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 9px;
+  color: #5a5040;
+  font-family: var(--mono);
+  letter-spacing: 0.06em;
+}
+.paper-card-body {
+  padding: 12px 18px;
+  background: #faf7f2;
+}
+.paper-card-abstract-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #9c8f7a;
+  margin-bottom: 7px;
+}
+.paper-card-abstract {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: #3d3528;
+  line-height: 1.7;
+  font-style: italic;
+  border-left: 2px solid #d6ccbb;
+  padding-left: 12px;
+  margin-bottom: 12px;
+}
+.paper-card-footer {
+  padding: 10px 18px 14px;
+  background: #f7f3ec;
+  border-top: 1px solid #e0d9ce;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.verdict-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: rgba(255,255,255,0.6);
+}
+
+/* ── Expander ───────────────────────────────────── */
+.expander-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  margin-bottom: 10px;
+  transition: color 0.15s;
+}
+.expander-toggle:hover { color: var(--green); }
+.sentence-score-row {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sentence-score-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+.sentence-score-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 3px;
+  line-height: 1.5;
+}
+
+/* ── Spinner ────────────────────────────────────── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 13px; height: 13px;
+  border: 1.5px solid var(--border2);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ── Right panel ────────────────────────────────── */
+.right-panel {
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.right-panel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 10px;
+  padding: 32px;
+  text-align: center;
+}
+.right-panel-empty-mark {
+  font-family: var(--mono);
+  font-size: 28px;
+  color: var(--text3);
+  opacity: 0.3;
+}
+.right-panel-empty-text {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  line-height: 1.8;
+  letter-spacing: 0.06em;
+}
+
+/* ── Chat ───────────────────────────────────────── */
+.chat-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+.chat-header {
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.chat-header-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 5px var(--green);
+}
+.chat-messages {
+  flex: 1;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.chat-bubble {
+  max-width: 94%;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+}
+.chat-bubble.user {
+  background: var(--bg4);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  align-self: flex-end;
+}
+.chat-bubble.assistant {
+  background: rgba(0,229,122,0.04);
+  border: 1px solid rgba(0,229,122,0.12);
+  color: #4aaa78;
+  align-self: flex-start;
+}
+[data-theme="light"] .chat-bubble.assistant {
+  background: rgba(200,0,42,0.04);
+  border: 1px solid rgba(200,0,42,0.15);
+  color: #6e0016;
+}
+.chat-bubble.thinking {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text3);
+  align-self: flex-start;
+  font-style: italic;
+  font-size: 10.5px;
+}
+.chat-input-row {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.chat-input-row textarea {
+  resize: none;
+  flex: 1;
+  min-height: 36px;
+  max-height: 90px;
+  padding: 7px 11px;
+  font-size: 11.5px;
+  background: var(--bg3);
+}
+.chat-send {
+  background: transparent;
+  border: 1px solid var(--green);
+  border-radius: var(--radius);
+  color: var(--green);
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+  font-size: 14px;
+}
+.chat-send:hover:not(:disabled) {
+  background: var(--green);
+  color: var(--bg);
+}
+.chat-send:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ── Right panel overrides ──────────────────────── */
+.right-panel .chat-messages { max-height: none; }
+
+/* always fixed — never follow theme accent */
+.score-bar-fill[style*="var(--green)"] { background: #00e57a !important; }
+.score-bar-fill[style*="var(--red)"]   { background: #ff4d6a !important; }
+.health-dot.ok  { background: #00e57a !important; box-shadow: 0 0 6px #00e57a !important; }
+.health-dot.err { background: #ff4d6a !important; }
+
+/* ── Utility ────────────────────────────────────── */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.gap-8 { gap: 8px; }
+.mt-4 { margin-top: 4px; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.hidden { display: none !important; }
+.text-muted { color: var(--text2); }
+.text-mono { font-family: var(--mono); }
+.fade-in { animation: fadeIn 0.35s ease forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- ── Sidebar ─────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">∴</div>
+      <div>
+        <div class="sidebar-logo-text">cl<span style="color: var(--green)">AI</span>m</div>
+        <div class="sidebar-logo-sub">clAIm · v2.0</div>
+      </div>
+    </div>
+
+    <a class="back-link" href="index.html">← HOMEPAGE</a>
+
+    <div class="sidebar-divider"></div>
+
+    <div>
+      <div class="sidebar-section-label">Mode</div>
+      <button class="mode-btn active" id="btn-mode1" onclick="setMode(1)">
+        <span class="mode-dot"></span> Claim Review
+      </button>
+      <button class="mode-btn" id="btn-mode2" onclick="setMode(2)">
+        <span class="mode-dot"></span> Claim Check
+      </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div>
+      <div class="sidebar-section-label">Stack</div>
+      <table class="stack-table">
+        <tr><td>Model</td><td>DeBERTa-v3-base</td></tr>
+        <tr><td>Train</td><td>MultiNLI → SciFact</td></tr>
+        <tr><td>XAI</td><td>IntGrad N=25</td></tr>
+        <tr><td>LLM</td><td>Phi3 / Ollama</td></tr>
+        <tr><td>RAG</td><td>Semantic Scholar</td></tr>
+      </table>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <div>
+      <div class="sidebar-section-label">Backend</div>
+      <div class="health-row">
+        <span class="health-dot" id="health-dot"></span>
+        <span class="health-label" id="health-label">checking…</span>
+      </div>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="theme-icon">☀</span>
+      <span id="theme-label">light mode</span>
+    </button>
+
+  </aside>
+
+  <!-- ── Main ────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- MODE 1 -->
+    <div id="view-mode1">
+      <div class="page-header">
+        <div class="page-eyebrow">Mode 01</div>
+        <div class="page-title">Claim Review</div>
+        <div class="page-sub">Paste a claim sentence and evidence. The model finds the most relevant sentence and analyses it.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="m1-claim">Claim</label>
+        <textarea id="m1-claim" rows="2" placeholder="e.g. Aspirin inhibits the production of thromboxane A2."></textarea>
+      </div>
+      <div class="field">
+        <label class="field-label" for="m1-evidence">Evidence</label>
+        <textarea id="m1-evidence" rows="5" placeholder="Paste a sentence or full paragraph…"></textarea>
+      </div>
+      <button class="btn-primary" id="m1-submit" onclick="runMode1()">
+        <span>Analyse</span>
+      </button>
+
+      <div id="m1-results" class="hidden"></div>
+    </div>
+
+    <!-- MODE 2 -->
+    <div id="view-mode2" class="hidden">
+      <div class="page-header">
+        <div class="page-eyebrow">Mode 02</div>
+        <div class="page-title">Claim Check</div>
+        <div class="page-sub">Enter a claim sentence. Semantic Scholar is queried and each paper is scored against your claim.</div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="m2-claim">Claim</label>
+        <textarea id="m2-claim" rows="2" placeholder="e.g. COVID-19 mRNA vaccines reduce hospitalisation."></textarea>
+      </div>
+      <button class="btn-primary" id="m2-submit" onclick="runMode2()">
+        <span>Retrieve Papers</span>
+      </button>
+
+      <div id="m2-results" class="hidden"></div>
+    </div>
+
+  </main>
+
+  <!-- ── Right panel ──────────────────────────────── -->
+  <aside class="right-panel" id="right-panel">
+    <div class="right-panel-empty">
+      <div class="right-panel-empty-mark">∴</div>
+      <div class="right-panel-empty-text">Run an analysis to<br>enable follow-up<br>questions here</div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════
+const API = "https://minoola-claim-ai.hf.space";
+
+const LABEL_COLOR = {
+  SUPPORT:         "var(--support)",
+  CONTRADICT:      "var(--contradict)",
+  NOT_ENOUGH_INFO: "var(--nei)",
+};
+const LABEL_HEX = {
+  SUPPORT:         "#00e57a",
+  CONTRADICT:      "#ff4d6a",
+  NOT_ENOUGH_INFO: "#ffb800",
+};
+const LABEL_ICON = {
+  SUPPORT:         "✅",
+  CONTRADICT:      "❌",
+  NOT_ENOUGH_INFO: "⚠️",
+};
+const LABEL_DISPLAY = {
+  SUPPORT:         "SUPPORT",
+  CONTRADICT:      "CONTRADICT",
+  NOT_ENOUGH_INFO: "NOT ENOUGH INFO",
+};
+
+// ── Read mode from URL param (?mode=1 or ?mode=2) ─────────
+const urlMode = new URLSearchParams(window.location.search).get('mode');
+if (urlMode === '2') { window.addEventListener('DOMContentLoaded', () => setMode(2)); }
+
+// ══════════════════════════════════════════════════════════
+// MODE SWITCHER
+// ══════════════════════════════════════════════════════════
+let currentMode = 1;
+
+function setMode(m) {
+  currentMode = m;
+  document.getElementById("view-mode1").classList.toggle("hidden", m !== 1);
+  document.getElementById("view-mode2").classList.toggle("hidden", m !== 2);
+  document.getElementById("btn-mode1").classList.toggle("active", m === 1);
+  document.getElementById("btn-mode2").classList.toggle("active", m === 2);
+}
+
+// ══════════════════════════════════════════════════════════
+// HEALTH CHECK
+// ══════════════════════════════════════════════════════════
+async function checkHealth() {
+  const dot   = document.getElementById("health-dot");
+  const label = document.getElementById("health-label");
+  try {
+    const r = await fetch(`${API}/health`, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      dot.classList.add("ok");
+      label.textContent = "online";
+    } else {
+      dot.classList.add("err");
+      label.textContent = "error";
+    }
+  } catch {
+    dot.classList.add("err");
+    label.textContent = "offline";
+  }
+}
+checkHealth();
+setInterval(checkHealth, 15000);
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+function setLoading(btnId, loading) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  btn.innerHTML = loading
+    ? '<span class="spinner"></span><span>Working…</span>'
+    : '<span>' + (btnId.startsWith("m1") ? "Analyse" : "Retrieve Papers") + '</span>';
+}
+
+function scoreColor(s) {
+  const alpha = Math.min(Math.abs(s) * 0.85, 0.85);
+  return s >= 0
+    ? `rgba(0,229,122,${alpha})`
+    : `rgba(255,77,106,${alpha})`;
+}
+
+function scoreGlow(s) {
+  const intensity = Math.min(Math.abs(s), 1);
+  return s >= 0
+    ? `0 0 ${6 * intensity}px rgba(0,229,122,${0.4 * intensity})`
+    : `0 0 ${6 * intensity}px rgba(255,77,106,${0.4 * intensity})`;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER HELPERS
+// ══════════════════════════════════════════════════════════
+function renderVerdictBanner(label, confidence) {
+  const c = LABEL_HEX[label];
+  return `
+    <div class="verdict-banner fade-in" style="background:${c}0d;border-color:${c}33;color:${c};">
+      <div>
+        <div class="verdict-label">${LABEL_DISPLAY[label]}</div>
+      </div>
+      <div style="height:32px;width:1px;background:${c}22;"></div>
+      <div class="verdict-conf-block">
+        <div class="verdict-conf-num" style="color:${c};">${(confidence*100).toFixed(1)}%</div>
+        <div class="verdict-conf-label">confidence</div>
+      </div>
+    </div>`;
+}
+
+function renderProbBars(probs) {
+  const labels = ["SUPPORT","NOT_ENOUGH_INFO","CONTRADICT"];
+  return `
+    <div class="panel fade-in">
+      <div class="panel-title">Class probabilities</div>
+      ${labels.map((lbl,i) => `
+        <div class="prob-row">
+          <div class="prob-header">
+            <span class="prob-lbl">${LABEL_DISPLAY[lbl]}</span>
+            <span class="prob-num" style="color:${LABEL_HEX[lbl]};">${(probs[i]*100).toFixed(1)}%</span>
+          </div>
+          <div class="prob-track">
+            <div class="prob-fill" style="width:${(probs[i]*100).toFixed(1)}%;background:${LABEL_HEX[lbl]};"></div>
+          </div>
+        </div>`).join("")}
+    </div>`;
+}
+
+function renderEvidencePanel(sentence, supporting) {
+  const suppHtml = supporting && supporting.length > 0
+    ? `<div class="evidence-supporting-label">Supporting sentences</div>
+       ${supporting.map(s => `<div class="evidence-supporting-item">${escapeHtml(s.sentence)}</div>`).join("")}`
+    : "";
+  return `
+    <div class="panel fade-in">
+      <div class="panel-title">Winning evidence sentence</div>
+      <div class="evidence-quote">${escapeHtml(sentence)}</div>
+      ${suppHtml}
+    </div>`;
+}
+
+function renderAttributionPanel(tokens, skipSet) {
+  let overlayHtml = '<div class="attribution-text">';
+  for (const {token, score} of tokens) {
+    const display = token.replace(/▁/g," ").replace(/\[CLS\]/g,"").replace(/\[SEP\]/g,"");
+    if (!display.trim() || skipSet.has(token)) {
+      overlayHtml += `<span style="color:var(--text2);">${escapeHtml(display)}</span>`;
+      continue;
+    }
+    const bg   = scoreColor(score);
+    const glow = scoreGlow(score);
+    overlayHtml += `<span class="tok" style="background:${bg};box-shadow:${glow};" title="${score.toFixed(4)}">${escapeHtml(display)}</span>`;
+  }
+  overlayHtml += "</div>";
+
+  const content = tokens.filter(({token}) => !skipSet.has(token) && token.replace(/▁/g,"").trim());
+  const top5 = [...content].sort((a,b) => Math.abs(b.score)-Math.abs(a.score)).slice(0,5);
+
+  const tableHtml = `
+    <table class="attr-table">
+      <thead><tr><th>Token</th><th>Saliency</th><th>Direction</th></tr></thead>
+      <tbody>
+        ${top5.map(({token,score}) => {
+          const display  = token.replace(/▁/g," ").trim();
+          const dir      = score >= 0 ? "→ toward label" : "← away from label";
+          const barColor = score >= 0 ? "var(--green)" : "var(--red)";
+          return `<tr>
+            <td>${escapeHtml(display)}</td>
+            <td>
+              <div class="score-bar-wrap">
+                <div class="score-bar-track">
+                  <div class="score-bar-fill" style="width:${(Math.abs(score)*100).toFixed(0)}%;background:${barColor};"></div>
+                </div>
+                <span class="score-val" style="color:${barColor};">${score>=0?"+":""}${score.toFixed(3)}</span>
+              </div>
+            </td>
+            <td class="score-dir">${dir}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>`;
+
+  return `
+    <div class="panel fade-in">
+      <div class="panel-title">Token attributions — integrated gradients</div>
+      ${overlayHtml}
+      ${tableHtml}
+    </div>`;
+}
+
+function renderPhi3Panels(reasoning, science) {
+  return `
+    <div class="phi3-panel reasoning fade-in">
+      <div class="phi3-panel-header">🧠 Model reasoning</div>
+      ${escapeHtml(reasoning)}
+    </div>
+    <div class="phi3-panel science fade-in">
+      <div class="phi3-panel-header">🔬 Scientific explanation</div>
+      ${escapeHtml(science)}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// CHAT PANEL
+// ══════════════════════════════════════════════════════════
+function makeChatPanel(context) {
+  const panelId    = "chat-" + Date.now();
+  const messagesId = panelId + "-msgs";
+  const inputId    = panelId + "-input";
+
+  const html = `
+    <div class="chat-panel fade-in" id="${panelId}">
+      <div class="chat-header">
+        <span class="chat-header-dot"></span>
+        Follow-up questions
+      </div>
+      <div class="chat-messages" id="${messagesId}">
+        <div class="chat-bubble assistant">Ask me anything about this analysis.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea id="${inputId}" rows="1" placeholder="Ask a follow-up question…" onkeydown="chatKeydown(event,'${panelId}','${messagesId}','${inputId}')"></textarea>
+        <button class="chat-send" id="${panelId}-send" onclick="sendChat('${panelId}','${messagesId}','${inputId}')">↑</button>
+      </div>
+    </div>`;
+
+  window["__chat_" + panelId] = { context, history: [], busy: false };
+  return html;
+}
+
+function chatKeydown(event, panelId, messagesId, inputId) {
+  if (event.key === "Enter" && !event.shiftKey) {
+    event.preventDefault();
+    sendChat(panelId, messagesId, inputId);
+  }
+}
+
+async function sendChat(panelId, messagesId, inputId) {
+  const state = window["__chat_" + panelId];
+  if (!state || state.busy) return;
+
+  const inputEl    = document.getElementById(inputId);
+  const messagesEl = document.getElementById(messagesId);
+  const sendBtn    = document.getElementById(panelId + "-send");
+  const message    = inputEl.value.trim();
+  if (!message) return;
+
+  state.busy = true;
+  sendBtn.disabled = true;
+  inputEl.value = "";
+
+  messagesEl.innerHTML += `<div class="chat-bubble user">${escapeHtml(message)}</div>`;
+  messagesEl.innerHTML += `<div class="chat-bubble thinking" id="${panelId}-thinking">Phi3 is thinking…</div>`;
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  try {
+    const r = await fetch(`${API}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...state.context, history: state.history, message }),
+    });
+    const data = await r.json().catch(() => null);
+    const response = r.ok
+      ? (data && data.response ? data.response : "No response.")
+      : (data && data.detail ? data.detail : "Error from server.");
+
+    document.getElementById(panelId + "-thinking")?.remove();
+    messagesEl.innerHTML += `<div class="chat-bubble assistant">${escapeHtml(response)}</div>`;
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    state.history.push({ role: "user",      content: message  });
+    state.history.push({ role: "assistant", content: response });
+  } catch (err) {
+    document.getElementById(panelId + "-thinking")?.remove();
+    messagesEl.innerHTML += `<div class="chat-bubble assistant" style="color:var(--red);">⚠️ ${escapeHtml(String(err))}</div>`;
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  state.busy = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+// ══════════════════════════════════════════════════════════
+// FULL ANALYSIS PIPELINE
+// ══════════════════════════════════════════════════════════
+async function runFullPipeline(claim, evidenceText, container) {
+  container.innerHTML = '<div class="flex items-center gap-8" style="color:var(--text3);margin:20px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> Splitting and scoring sentences…</div>';
+
+  let analyzeData;
+  try {
+    const r = await fetch(`${API}/analyze`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ claim, evidence: evidenceText }),
+    });
+    analyzeData = await r.json();
+    if (!r.ok) throw new Error(analyzeData.detail || "Analyze failed");
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--red);margin-top:20px;font-family:var(--mono);font-size:11px;">error: ${escapeHtml(String(e))}</div>`;
+    return;
+  }
+
+  const { winner, supporting, all_scores, attribution_available } = analyzeData;
+  const SKIP_SET = new Set(["[CLS]","[SEP]","[PAD]",".",",","!","?",":",";",'""',"'s","'",'"',"/","\\","-","—","–","--","(",")","{","}","[","]","@","#","%","&","*","^","~"]);
+
+  const expanderId = "exp-" + Date.now();
+  let html = `<div class="divider"></div>`;
+  html += `<button class="expander-toggle" id="${expanderId}-btn">▶ all sentence scores (${all_scores.length})</button>`;
+  html += `<div id="${expanderId}-body" class="hidden">`;
+  for (const s of all_scores) {
+    const c = LABEL_HEX[s.label];
+    html += `<div class="sentence-score-row">
+      <span class="sentence-score-label" style="color:${c};">${s.label} ${(s.confidence*100).toFixed(1)}%</span>
+      <div class="sentence-score-text">${escapeHtml(s.sentence)}</div>
+    </div>`;
+  }
+  html += `</div>`;
+
+  html += renderVerdictBanner(winner.label, winner.confidence);
+  html += renderProbBars([0,0,0]);
+  html += renderEvidencePanel(winner.sentence, supporting);
+
+  if (attribution_available) {
+    html += `<div id="attr-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> running integrated gradients…</div>`;
+  }
+
+  html += `<div id="phi3-reasoning-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> phi3 — model reasoning…</div>`;
+  html += `<div id="phi3-science-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> phi3 — scientific explanation…</div>`;
+
+  container.innerHTML = html;
+  container.classList.remove("hidden");
+
+  window["__exp_" + expanderId] = false;
+  document.getElementById(expanderId + "-btn").onclick = () => {
+    window["__exp_" + expanderId] = !window["__exp_" + expanderId];
+    document.getElementById(expanderId + "-body").classList.toggle("hidden", !window["__exp_" + expanderId]);
+    document.getElementById(expanderId + "-btn").textContent =
+      (window["__exp_" + expanderId] ? "▼" : "▶") + ` all sentence scores (${all_scores.length})`;
+  };
+
+  // predict for probs
+  let probs = [0,0,0];
+  try {
+    const r2 = await fetch(`${API}/predict`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ claim, evidence: winner.sentence }),
+    });
+    const d2 = await r2.json();
+    probs = d2.probabilities;
+    const probPanel = container.querySelector(".panel");
+    if (probPanel) probPanel.outerHTML = renderProbBars(probs);
+  } catch(e) {}
+
+  // attribution
+  let top5Tokens = [];
+  if (attribution_available) {
+    try {
+      const r3 = await fetch(`${API}/attribute`, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ claim, evidence: winner.sentence, label_id: winner.label === "SUPPORT" ? 0 : winner.label === "NOT_ENOUGH_INFO" ? 1 : 2 }),
+      });
+      const tokens = await r3.json();
+      const attrPlaceholder = document.getElementById("attr-placeholder");
+      if (attrPlaceholder) attrPlaceholder.outerHTML = renderAttributionPanel(tokens, SKIP_SET);
+      const content = tokens.filter(({token}) => !SKIP_SET.has(token) && token.replace(/▁/g,"").trim());
+      top5Tokens = [...content].sort((a,b)=>Math.abs(b.score)-Math.abs(a.score)).slice(0,10).map(({token,score})=>[token.replace(/▁/g," ").trim(), score]);
+    } catch(e) {
+      const p = document.getElementById("attr-placeholder");
+      if (p) p.outerHTML = `<div style="color:var(--text3);font-family:var(--mono);font-size:11px;margin:8px 0;">attribution unavailable</div>`;
+    }
+  }
+
+  // phi3 reasoning
+  let modelReasoning = "";
+  let scienceExplain = "";
+  try {
+    const r4 = await fetch(`${API}/explain/reasoning`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ claim, evidence: winner.sentence, label: winner.label, confidence: winner.confidence, probabilities: probs, top5_tokens: top5Tokens }),
+    });
+    const d4 = await r4.json();
+    modelReasoning = d4.response || "";
+    const p4 = document.getElementById("phi3-reasoning-placeholder");
+    if (p4) p4.outerHTML = `<div class="phi3-panel reasoning fade-in"><div class="phi3-panel-header">🧠 Model reasoning</div>${escapeHtml(modelReasoning)}</div>`;
+  } catch(e) {
+    const p = document.getElementById("phi3-reasoning-placeholder");
+    if (p) p.outerHTML = `<div style="color:var(--text3);font-family:var(--mono);font-size:11px;margin:8px 0;">model reasoning unavailable</div>`;
+  }
+
+  // phi3 science
+  try {
+    const r5 = await fetch(`${API}/explain/science`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ claim, evidence: winner.sentence, label: winner.label }),
+    });
+    const d5 = await r5.json();
+    scienceExplain = d5.response || "";
+    const p5 = document.getElementById("phi3-science-placeholder");
+    if (p5) p5.outerHTML = `<div class="phi3-panel science fade-in"><div class="phi3-panel-header">🔬 Scientific explanation</div>${escapeHtml(scienceExplain)}</div>`;
+  } catch(e) {
+    const p = document.getElementById("phi3-science-placeholder");
+    if (p) p.outerHTML = `<div style="color:var(--text3);font-family:var(--mono);font-size:11px;margin:8px 0;">scientific explanation unavailable</div>`;
+  }
+
+  // chat
+  const chatContext = {
+    claim, evidence: winner.sentence,
+    label: winner.label, confidence: winner.confidence,
+    probabilities: probs, top5_tokens: top5Tokens,
+    model_reasoning: modelReasoning, science_explanation: scienceExplain,
+  };
+  const rightPanel = document.getElementById("right-panel");
+  if (rightPanel) rightPanel.innerHTML = makeChatPanel(chatContext);
+}
+
+// ══════════════════════════════════════════════════════════
+// MODE 1
+// ══════════════════════════════════════════════════════════
+async function runMode1() {
+  const claim    = document.getElementById("m1-claim").value.trim();
+  const evidence = document.getElementById("m1-evidence").value.trim();
+  if (!claim)    { alert("Please enter a claim."); return; }
+  if (!evidence) { alert("Please enter evidence text."); return; }
+
+  setLoading("m1-submit", true);
+  const results = document.getElementById("m1-results");
+  results.classList.add("hidden");
+  results.innerHTML = "";
+  await runFullPipeline(claim, evidence, results);
+  setLoading("m1-submit", false);
+}
+
+// ══════════════════════════════════════════════════════════
+// MODE 2
+// ══════════════════════════════════════════════════════════
+let m2Candidates = [];
+let m2Claim      = "";
+
+async function runMode2() {
+  const claim = document.getElementById("m2-claim").value.trim();
+  if (!claim) { alert("Please enter a claim."); return; }
+
+  m2Claim = claim;
+  m2Candidates = [];
+
+  setLoading("m2-submit", true);
+  const results = document.getElementById("m2-results");
+  results.innerHTML = '<div class="flex items-center gap-8" style="color:var(--text3);margin:20px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> querying semantic scholar…</div>';
+  results.classList.remove("hidden");
+
+  try {
+    const r = await fetch(`${API}/retrieve`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ claim }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || "Retrieve failed");
+    m2Candidates = data;
+    renderPaperCards(results);
+  } catch(e) {
+    results.innerHTML = `<div style="color:var(--red);margin-top:20px;font-family:var(--mono);font-size:11px;">retrieval error: ${escapeHtml(String(e))}</div>`;
+  }
+
+  setLoading("m2-submit", false);
+}
+
+function renderPaperCards(container) {
+  if (!m2Candidates.length) {
+    container.innerHTML = `<div style="color:var(--text2);margin-top:20px;font-family:var(--mono);font-size:11px;">No relevant papers returned. Try rephrasing. If the issue persists, Semantic Scholar may not have the indexed literature on the claim.</div>`;
+    return;
+  }
+
+  let html = `<div class="divider"></div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;margin-bottom:18px;text-transform:uppercase;">
+      ${m2Candidates.length} papers retrieved
+    </div>`;
+
+  for (let i = 0; i < m2Candidates.length; i++) {
+    const p   = m2Candidates[i];
+    const c   = LABEL_HEX[p.label];
+    const authStr = p.authors && p.authors.length
+      ? p.authors.slice(0,3).join(", ") + (p.authors.length > 3 ? " et al." : "")
+      : "Authors unavailable";
+
+    html += `
+      <div class="paper-card" id="paper-card-${i}" style="border-left-color:${c};">
+        <div class="paper-card-header">
+          <div class="paper-card-title">${escapeHtml(p.paper_title)}</div>
+          <div class="paper-card-authors">
+            ${escapeHtml(authStr)}
+            ${p.year ? `<span class="paper-card-year">${p.year}</span>` : ""}
+          </div>
+        </div>
+        <div class="paper-card-body">
+          <div class="paper-card-abstract-label">Key sentence</div>
+          <div class="paper-card-abstract">${escapeHtml(p.sentence)}</div>
+        </div>
+        <div class="paper-card-footer">
+          <span class="verdict-stamp" style="color:${c};border-color:${c}33;background:${c}0d;">
+            ${LABEL_DISPLAY[p.label]} · ${(p.confidence*100).toFixed(1)}%
+          </span>
+          <button class="btn-secondary" id="analyse-btn-${i}" onclick="analyseCard(${i})">Analyse →</button>
+        </div>
+      </div>`;
+  }
+
+  // Single dedicated analysis panel — lives completely outside all paper cards
+  html += `<div id="card-analysis-panel" class="hidden"></div>`;
+
+  container.innerHTML = html;
+}
+
+async function analyseCard(i) {
+  const p       = m2Candidates[i];
+  const panel   = document.getElementById("card-analysis-panel");
+
+  // Scroll card into view and highlight it
+  document.querySelectorAll(".paper-card").forEach(c => c.style.opacity = "0.45");
+  const activeCard = document.getElementById(`paper-card-${i}`);
+  if (activeCard) {
+    activeCard.style.opacity = "1";
+    activeCard.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  // Show and reset the analysis panel
+  panel.classList.remove("hidden");
+  panel.style.cssText = "margin-top:24px;padding-top:20px;border-top:1px solid var(--border2);";
+  panel.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;">
+    Analysing — <span style="color:var(--text2);">${escapeHtml(p.paper_title)}</span>
+  </div>`;
+
+  await runFullPipeline(m2Claim, p.sentence, panel);
+}
+
+// ══════════════════════════════════════════════════════════
+// THEME
+// ══════════════════════════════════════════════════════════
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('cc-theme', theme);
+  const icon  = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  if (theme === 'light') {
+    icon.textContent  = '☾';
+    label.textContent = 'dark mode';
+  } else {
+    icon.textContent  = '☀';
+    label.textContent = 'light mode';
+  }
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+applyTheme(localStorage.getItem('cc-theme') || 'dark');
+
+// ══════════════════════════════════════════════════════════
+// EXPANDER
+// ══════════════════════════════════════════════════════════
+function toggleExpander(id) {
+  // handled inline
+}
+</script>
+</body>
+</html>

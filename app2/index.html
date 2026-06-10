@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>clAIm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #0a0c0e;
+  --bg2:        #0f1215;
+  --bg3:        #161b20;
+  --border:     #1e252d;
+  --border2:    #28333d;
+  --text:       #e8edf2;
+  --text2:      #7a8a98;
+  --text3:      #3d4f5c;
+  --green:      #00e57a;
+  --red:        #ff4d6a;
+  --amber:      #ffb800;
+  --blue:       #3d9aff;
+  --syne:       'Syne', sans-serif;
+  --mono:       'IBM Plex Mono', monospace;
+  --sans:       'IBM Plex Sans', sans-serif;
+}
+
+[data-theme="light"] {
+  --bg:         #f4f1eb;
+  --bg2:        #edeae2;
+  --bg3:        #e4e0d6;
+  --bg4:        #dbd6cc;
+  --border:     #d0ccc0;
+  --border2:    #b8b2a4;
+  --text:       #1a1612;
+  --text2:      #5a5040;
+  --text3:      #9c8f7a;
+  --green:      #c8002a;
+  --red:        #c8002a;
+  --amber:      #a06800;
+  --blue:       #1a6fc4;
+  --support:    #008c4a;
+  --contradict: #c8002a;
+  --nei:        #a06800;
+  --accent:     #c8002a;
+}
+
+/* theme toggle button */
+.theme-toggle {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.theme-toggle:hover { border-color: var(--border2); color: var(--text); }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow-x: hidden;
+}
+
+/* ── Canvas background ── */
+#canvas-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.45;
+}
+
+/* ── Noise overlay ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* ── Main layout ── */
+.page {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* ── Top bar ── */
+.topbar {
+  padding: 28px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0,0,0,0.1);
+  backdrop-filter: blur(12px);
+}
+
+.topbar-logo {
+  font-family: var(--syne);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-logo-mark {
+  width: 28px; height: 28px;
+  border: 1.5px solid var(--green);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  color: var(--green);
+  font-family: var(--mono);
+  font-weight: 400;
+}
+
+.health-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+}
+.health-pip {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: background 0.4s, box-shadow 0.4s;
+}
+.health-pip.ok {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+}
+.health-pip.err { background: var(--red); }
+
+/* ── Hero ── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 48px 60px;
+  text-align: center;
+  gap: 0;
+}
+
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--green);
+  margin-bottom: 24px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease 0.1s forwards;
+}
+
+.hero-title {
+  font-family: var(--syne);
+  font-weight: 800;
+  font-size: clamp(52px, 8vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin-bottom: 8px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.2s forwards;
+}
+
+.hero-title-accent {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--text3);
+}
+
+.hero-subtitle {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text2);
+  line-height: 1.7;
+  max-width: 480px;
+  margin: 28px auto 0;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.35s forwards;
+}
+
+/* ── Stack tags ── */
+.stack-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 36px;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.5s forwards;
+}
+
+.stack-tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 4px 10px;
+  background: var(--bg2);
+  letter-spacing: 0.05em;
+  transition: color 0.2s, border-color 0.2s;
+}
+.stack-tag:hover {
+  color: var(--text2);
+  border-color: var(--border2);
+}
+.stack-tag span {
+  color: var(--text2);
+  margin-right: 4px;
+}
+
+/* ── Mode buttons ── */
+.mode-section {
+  margin-top: 60px;
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.7s ease 0.65s forwards;
+}
+
+.mode-card {
+  position: relative;
+  width: 260px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 28px 26px;
+  text-align: left;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  overflow: hidden;
+  display: block;
+}
+.mode-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.mode-card.m1::before { background: radial-gradient(ellipse at top left, rgba(0,229,122,0.06), transparent 70%); }
+.mode-card.m2::before { background: radial-gradient(ellipse at top left, rgba(61,154,255,0.06), transparent 70%); }
+.mode-card:hover { transform: translateY(-3px); border-color: var(--border2); }
+.mode-card:hover::before { opacity: 1; }
+.mode-card.m1:hover { border-color: rgba(0,229,122,0.3); }
+.mode-card.m2:hover { border-color: rgba(61,154,255,0.3); }
+
+.mode-card-icon {
+  font-size: 22px;
+  margin-bottom: 14px;
+  display: block;
+}
+.mode-card-title {
+  font-family: var(--syne);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: 0.01em;
+}
+.mode-card-desc {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.65;
+}
+.mode-card-arrow {
+  position: absolute;
+  bottom: 22px;
+  right: 22px;
+  font-size: 16px;
+  color: var(--text3);
+  transition: color 0.2s, transform 0.2s;
+}
+.mode-card:hover .mode-card-arrow {
+  color: var(--text2);
+  transform: translate(2px, -2px);
+}
+
+/* ── Footer ── */
+.footer {
+  padding: 20px 48px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.1);
+  backdrop-filter: blur(12px);
+}
+.footer-credits {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.footer-credits strong { color: var(--text2); font-weight: 400; }
+.footer-sep { color: var(--border2); }
+.footer-version {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas-bg"></canvas>
+
+<div class="page">
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-mark">∴</div>
+        cl<span style="color: var(--green)">AI</span>m
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-icon">☀</span>
+        <span id="theme-label">light</span>
+      </button>
+      <div class="health-pill">
+        <span class="health-pip" id="health-pip"></span>
+        <span id="health-label">checking backend…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">Scientific Claim–Evidence Consistency Checker</div>
+
+    <h1 class="hero-title">
+      Claim<br>
+      <span class="hero-title-accent">AI</span><br>
+      Evidence
+    </h1>
+
+    <p class="hero-subtitle">
+      DeBERTa-v3-base trained on MultiNLI, fine-tuned on SciFact.<br>
+      Token attribution via Integrated Gradients.<br>
+      LLM reasoning via Phi3.<br>
+      RAG via Semantic Scholar API
+    </p>
+
+    <div class="stack-row">
+      <span class="stack-tag"><span>NLI</span> DeBERTa-v3-base</span>
+      <span class="stack-tag"><span>Train</span> MultiNLI → SciFact FT</span>
+      <span class="stack-tag"><span>XAI</span> IntGrad N=25</span>
+      <span class="stack-tag"><span>LLM</span> Phi3 / Ollama</span>
+      <span class="stack-tag"><span>RAG</span> Semantic Scholar</span>
+    </div>
+
+    <div class="mode-section">
+      <a class="mode-card m1" href="app.html?mode=1">
+        <span class="mode-card-icon">🔍</span>
+        <div class="mode-card-title">Claim Review</div>
+        <div class="mode-card-desc">Paste a claim and corresponding evidence paragraph. The model finds the most relevant sentence and analyses it.</div>
+      </a>
+      <a class="mode-card m2" href="app.html?mode=2">
+        <span class="mode-card-icon">📡</span>
+        <div class="mode-card-title">Claim Check</div>
+        <div class="mode-card-desc">Enter a claim. RAG retrieves papers from Semantic Scholar and scores each against your claim.</div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-credits">
+      <strong>Minoo La</strong>
+      <span class="footer-sep">·</span>
+      <strong>Prof. Kyuhan Lee</strong>
+    </div>
+    <div class="footer-version">clAIm · v2.0</div>
+  </footer>
+</div>
+
+<script>
+// ── Animated knowledge graph background ──────────────────
+const canvas = document.getElementById('canvas-bg');
+const ctx    = canvas.getContext('2d');
+
+let W, H, nodes, edges;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+function initGraph() {
+  const N = 38;
+  nodes = Array.from({length: N}, () => ({
+    x:  Math.random() * W,
+    y:  Math.random() * H,
+    vx: (Math.random() - 0.5) * 0.28,
+    vy: (Math.random() - 0.5) * 0.28,
+    r:  Math.random() * 2 + 1,
+    pulse: Math.random() * Math.PI * 2,
+  }));
+
+  edges = [];
+  for (let i = 0; i < N; i++) {
+    for (let j = i + 1; j < N; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      if (Math.sqrt(dx*dx + dy*dy) < 180) edges.push([i, j]);
+    }
+  }
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Update nodes
+  for (const n of nodes) {
+    n.x += n.vx;
+    n.y += n.vy;
+    n.pulse += 0.015;
+    if (n.x < 0 || n.x > W) n.vx *= -1;
+    if (n.y < 0 || n.y > H) n.vy *= -1;
+  }
+
+  // Rebuild edges dynamically
+  edges = [];
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const d  = Math.sqrt(dx*dx + dy*dy);
+      if (d < 160) edges.push([i, j, d]);
+    }
+  }
+
+  // Draw edges
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  for (const [i, j, d] of edges) {
+    const alpha = (1 - d / 160) * 0.18;
+    ctx.beginPath();
+    ctx.moveTo(nodes[i].x, nodes[i].y);
+    ctx.lineTo(nodes[j].x, nodes[j].y);
+    ctx.strokeStyle = isLight ? `rgba(200, 0, 42, ${alpha})` : `rgba(0, 229, 122, ${alpha})`;
+    ctx.lineWidth   = 0.8;
+    ctx.stroke();
+  }
+
+  // Draw nodes
+  for (const n of nodes) {
+    const glow = 0.5 + 0.5 * Math.sin(n.pulse);
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r + glow * 0.8, 0, Math.PI * 2);
+    ctx.fillStyle = isLight ? `rgba(200, 0, 42, ${0.25 + glow * 0.35})` : `rgba(0, 229, 122, ${0.25 + glow * 0.35})`;
+    ctx.fill();
+  }
+
+  requestAnimationFrame(draw);
+}
+
+resize();
+initGraph();
+draw();
+window.addEventListener('resize', () => { resize(); initGraph(); });
+
+// ── Health check ─────────────────────────────────────────
+async function checkHealth() {
+  const pip   = document.getElementById('health-pip');
+  const label = document.getElementById('health-label');
+  try {
+    const r = await fetch('https://minoola-claim-ai.hf.space/health', { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      pip.classList.add('ok');
+      label.textContent = 'backend online';
+    } else {
+      pip.classList.add('err');
+      label.textContent = 'backend error';
+    }
+  } catch {
+    pip.classList.add('err');
+    label.textContent = 'backend offline';
+  }
+}
+checkHealth();
+
+// ── Theme ─────────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('cc-theme', theme);
+  const icon  = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+  if (theme === 'light') {
+    icon.textContent  = '☾';
+    label.textContent = 'dark';
+  } else {
+    icon.textContent  = '☀';
+    label.textContent = 'light';
+  }
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+// Apply saved theme on load
+applyTheme(localStorage.getItem('cc-theme') || 'dark');
+</script>
+</body>
+</html>

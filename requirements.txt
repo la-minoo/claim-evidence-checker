@@ -1,0 +1,24 @@
+# clAIm — backend dependencies
+# Note: torch is installed separately in Dockerfile with CPU-only index URL
+
+# Core ML
+transformers==4.44.0
+safetensors
+
+# XAI
+captum
+
+# NLP / tokenisation
+nltk
+sentencepiece
+
+# API framework
+fastapi
+uvicorn[standard]
+pydantic
+
+# HTTP
+requests
+
+# Utilities
+accelerate
