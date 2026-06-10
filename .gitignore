@@ -1,9 +1,25 @@
+# Python
 __pycache__/
 *.pyc
-.ipynb_checkpoints/
-data/
-models/
-*.pt
-*.bin
-*.safetensors
+*.pyo
+
+# MultiNLI checkpoints — not needed for deployment
+models/multinli_ckpt/
+
+# Raw datasets — not needed for deployment
+data/multinli/
+data/scifact/
+scifact_data/
+
+# Retrieval cache — rebuilds automatically
+data/retrieval_cache.json
+
+# Old frontend — superseded by app2/
+app/
+
+# Notebooks — not needed for deployment
+notebooks/
+
+# Environment
 .env
+*.egg-info/
