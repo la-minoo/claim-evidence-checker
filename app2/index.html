@@ -344,53 +344,94 @@ body::before {
 
 /* ── Mobile ── */
 @media (max-width: 600px) {
+  /* Prevent any horizontal overflow */
+  html, body { overflow-x: hidden; }
+
+  /* Topbar: tighter padding, smaller elements */
   .topbar {
-    padding: 16px 20px;
+    padding: 12px 16px;
+    gap: 8px;
   }
   .topbar-logo {
-    font-size: 13px;
-  }
-  .health-pill {
-    font-size: 10px;
-    padding: 4px 10px;
-  }
-  .hero {
-    padding: 48px 24px 40px;
-  }
-  .hero-eyebrow {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-  }
-  .hero-title {
-    font-size: clamp(42px, 14vw, 72px);
-  }
-  .hero-subtitle {
     font-size: 12px;
-    margin-top: 20px;
+    gap: 7px;
   }
-  .stack-row {
-    margin-top: 24px;
+  .topbar-logo-mark {
+    width: 22px; height: 22px;
+    font-size: 10px;
+    border-radius: 3px;
+  }
+  /* The right side div with toggle + health pill */
+  .topbar > div {
     gap: 6px;
   }
-  .stack-tag {
+  .theme-toggle {
     font-size: 10px;
-    padding: 3px 8px;
+    padding: 4px 8px;
+    gap: 4px;
   }
+  .health-pill {
+    font-size: 9.5px;
+    padding: 4px 8px;
+    gap: 5px;
+  }
+  /* Shorten "checking backend…" → "checking…" label handled by existing JS */
+
+  /* Hero */
+  .hero {
+    padding: 36px 16px 32px;
+    overflow-x: hidden;
+  }
+  .hero-eyebrow {
+    font-size: 8.5px;
+    letter-spacing: 0.10em;
+    margin-bottom: 16px;
+  }
+  /* Title: small enough to never overflow a 390px screen */
+  .hero-title {
+    font-size: clamp(34px, 16vw, 52px);
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+  .hero-subtitle {
+    font-size: 11px;
+    margin-top: 16px;
+    padding: 0 2px;
+  }
+
+  /* Stack tags */
+  .stack-row {
+    margin-top: 20px;
+    gap: 5px;
+    padding: 0 2px;
+  }
+  .stack-tag {
+    font-size: 9.5px;
+    padding: 3px 7px;
+    white-space: nowrap;
+  }
+
+  /* Mode cards: full-width column */
   .mode-section {
-    margin-top: 40px;
+    margin-top: 32px;
     flex-direction: column;
-    align-items: center;
-    gap: 12px;
+    align-items: stretch;
+    gap: 10px;
+    padding: 0 2px;
   }
   .mode-card {
     width: 100%;
-    max-width: 360px;
-    padding: 22px 20px;
+    max-width: 100%;
+    padding: 20px 18px 40px;
   }
+  .mode-card-title { font-size: 15px; }
+  .mode-card-desc  { font-size: 10.5px; }
+
+  /* Footer */
   .footer {
-    padding: 16px 20px;
+    padding: 14px 16px;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     align-items: flex-start;
   }
 }
