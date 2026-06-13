@@ -903,6 +903,189 @@ textarea::placeholder, input::placeholder { color: var(--text3); }
 .text-mono { font-family: var(--mono); }
 .fade-in { animation: fadeIn 0.35s ease forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ══════════════════════════════════════════════════════════
+   MOBILE  (≤ 768px)
+══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Collapse the 3-col grid into a single column */
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "sidebar"
+      "main";
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar → compact top bar ── */
+  .sidebar {
+    grid-area: sidebar;
+    position: sticky;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 0;
+    z-index: 100;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    overflow: visible;
+  }
+
+  /* Keep logo and back-link side by side */
+  .sidebar-logo {
+    order: 1;
+  }
+  .sidebar-logo-sub { display: none; }
+
+  .back-link {
+    order: 2;
+    margin-top: 0;
+    font-size: 10px;
+  }
+
+  /* Hide stack table and section labels — too much for mobile nav */
+  .sidebar > div:has(.stack-table),
+  .sidebar > div:has(.health-row),
+  .sidebar-divider {
+    display: none;
+  }
+
+  /* Mode buttons — horizontal pill row */
+  .sidebar > div:has(.mode-btn) {
+    order: 10;
+    width: 100%;
+    margin-top: 10px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+  }
+  .sidebar-section-label { display: none; }
+  .mode-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 11px;
+    padding: 7px 10px;
+    margin-bottom: 0;
+  }
+
+  /* Theme toggle → move to top-right area */
+  .theme-toggle {
+    order: 3;
+    font-size: 10px;
+    padding: 4px 10px;
+  }
+
+  /* ── Main ── */
+  .main {
+    grid-area: main;
+    padding: 20px 16px 120px; /* bottom padding for floating chat button */
+    max-width: 100%;
+  }
+
+  /* Page header */
+  .page-title { font-size: 22px; }
+  .page-sub { font-size: 11px; }
+
+  /* Inputs */
+  textarea, input[type="text"] {
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  /* Verdict banner: stack vertically */
+  .verdict-banner {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+  .verdict-label { font-size: 18px; }
+  .verdict-conf-num { font-size: 22px; }
+
+  /* Paper card footer wraps */
+  .paper-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .paper-card-title { font-size: 12.5px; }
+
+  /* ── Right panel → bottom drawer ── */
+  .right-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60vh;
+    max-height: 60vh;
+    z-index: 200;
+    border-left: none;
+    border-top: 1px solid var(--border2);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.4);
+  }
+  .right-panel.mobile-open {
+    transform: translateY(0);
+  }
+
+  /* Drag handle at top of drawer */
+  .right-panel::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 10px auto 2px;
+    flex-shrink: 0;
+  }
+
+  /* Floating chat button (injected by JS) */
+  #mobile-chat-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 201;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 50px;
+    padding: 10px 18px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  #mobile-chat-btn.has-content {
+    border-color: var(--green);
+    color: var(--green);
+    background: var(--bg2);
+    box-shadow: 0 4px 24px rgba(0,229,122,0.15);
+  }
+  #mobile-chat-btn:active { transform: scale(0.97); }
+
+  /* Overlay behind drawer */
+  #mobile-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 199;
+    background: rgba(0,0,0,0.5);
+  }
+  #mobile-overlay.visible { display: block; }
+}
 </style>
 </head>
 <body>
@@ -1021,6 +1204,9 @@ textarea::placeholder, input::placeholder { color: var(--text3); }
   </aside>
 
 </div>
+
+<!-- Mobile: overlay behind chat drawer -->
+<div id="mobile-overlay" onclick="closeMobileChat()"></div>
 
 <script>
 // ══════════════════════════════════════════════════════════
@@ -1609,6 +1795,79 @@ applyTheme(localStorage.getItem('cc-theme') || 'dark');
 function toggleExpander(id) {
   // handled inline
 }
+
+// ══════════════════════════════════════════════════════════
+// MOBILE CHAT DRAWER
+// ══════════════════════════════════════════════════════════
+function isMobile() { return window.innerWidth <= 768; }
+
+function injectMobileChatBtn() {
+  if (document.getElementById('mobile-chat-btn')) return;
+  const btn = document.createElement('button');
+  btn.id = 'mobile-chat-btn';
+  btn.innerHTML = '💬 <span id="mobile-chat-btn-label">Ask a question</span>';
+  btn.onclick = toggleMobileChat;
+  document.body.appendChild(btn);
+}
+
+function updateMobileChatBtn(hasContent) {
+  const btn = document.getElementById('mobile-chat-btn');
+  if (!btn) return;
+  if (hasContent) {
+    btn.classList.add('has-content');
+    document.getElementById('mobile-chat-btn-label').textContent = 'Chat open';
+  } else {
+    btn.classList.remove('has-content');
+    document.getElementById('mobile-chat-btn-label').textContent = 'Ask a question';
+  }
+}
+
+function toggleMobileChat() {
+  const panel = document.getElementById('right-panel');
+  const overlay = document.getElementById('mobile-overlay');
+  const isOpen = panel.classList.contains('mobile-open');
+  if (isOpen) {
+    closeMobileChat();
+  } else {
+    panel.classList.add('mobile-open');
+    overlay.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeMobileChat() {
+  const panel = document.getElementById('right-panel');
+  const overlay = document.getElementById('mobile-overlay');
+  panel.classList.remove('mobile-open');
+  overlay.classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+// Patch right-panel updates to also notify mobile button
+const _origRightPanel = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+const rightPanelEl = document.getElementById('right-panel');
+if (rightPanelEl) {
+  const observer = new MutationObserver(() => {
+    const hasChat = rightPanelEl.querySelector('.chat-panel') !== null;
+    updateMobileChatBtn(hasChat);
+    // Auto-open drawer when analysis populates the panel
+    if (hasChat && isMobile()) {
+      rightPanelEl.classList.add('mobile-open');
+      document.getElementById('mobile-overlay').classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+  });
+  observer.observe(rightPanelEl, { childList: true, subtree: false });
+}
+
+// Init on load
+window.addEventListener('DOMContentLoaded', () => {
+  if (isMobile()) injectMobileChatBtn();
+});
+window.addEventListener('resize', () => {
+  if (isMobile()) injectMobileChatBtn();
+});
+
 </script>
 </body>
 </html>
