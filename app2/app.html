@@ -1124,7 +1124,7 @@ textarea::placeholder, input::placeholder { color: var(--text3); }
         <tr><td>Model</td><td>DeBERTa-v3-base</td></tr>
         <tr><td>Train</td><td>MultiNLI → SciFact</td></tr>
         <tr><td>XAI</td><td>IntGrad N=25</td></tr>
-        <tr><td>LLM</td><td>Llama-3.1 / Groq</td></tr>
+        <tr><td>LLM</td><td>GPT-OSS-20B / Groq</td></tr>
         <tr><td>RAG</td><td>Semantic Scholar</td></tr>
       </table>
     </div>
@@ -1463,7 +1463,7 @@ async function sendChat(panelId, messagesId, inputId) {
   inputEl.value = "";
 
   messagesEl.innerHTML += `<div class="chat-bubble user">${escapeHtml(message)}</div>`;
-  messagesEl.innerHTML += `<div class="chat-bubble thinking" id="${panelId}-thinking">Llama-3.1 is thinking…</div>`;
+  messagesEl.innerHTML += `<div class="chat-bubble thinking" id="${panelId}-thinking">GPT-OSS-20B is thinking…</div>`;
   messagesEl.scrollTop = messagesEl.scrollHeight;
 
   try {
@@ -1538,8 +1538,8 @@ async function runFullPipeline(claim, evidenceText, container) {
     html += `<div id="attr-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> running integrated gradients…</div>`;
   }
 
-  html += `<div id="phi3-reasoning-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> Llama-3.1 — model reasoning…</div>`;
-  html += `<div id="phi3-science-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> Llama-3.1 — scientific explanation…</div>`;
+  html += `<div id="phi3-reasoning-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> GPT-OSS-20B — model reasoning…</div>`;
+  html += `<div id="phi3-science-placeholder" class="flex items-center gap-8" style="color:var(--text3);margin:8px 0;font-family:var(--mono);font-size:11px;letter-spacing:.06em;"><span class="spinner"></span> GPT-OSS-20B — scientific explanation…</div>`;
 
   container.innerHTML = html;
   container.classList.remove("hidden");

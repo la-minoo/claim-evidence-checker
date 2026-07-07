@@ -4,7 +4,7 @@ LLM chat helper for clAIm.
 
 Supports two backends, selected automatically via environment variable:
     - Groq API (hosted) — used when GROQ_API_KEY is set
-      Model: llama-3.1-8b-instant
+      Model: gpt oss 20b
       Fast (~0.3s), free tier, no local dependency
       Used for: web deployment on Render
 
@@ -32,7 +32,7 @@ from fastapi import HTTPException
 # ── Groq configuration ────────────────────────────────────────────────────────
 GROQ_API_KEY  = os.getenv("GROQ_API_KEY")
 GROQ_API_URL  = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL    = "llama-3.1-8b-instant"
+GROQ_MODEL    = "openai/gpt-oss-20b"
 GROQ_TIMEOUT  = 30   # Groq responds in ~0.3s warm; 30s is generous
 
 # ── Ollama configuration (local fallback) ─────────────────────────────────────
