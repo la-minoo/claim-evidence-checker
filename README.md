@@ -21,7 +21,7 @@ The system integrates:
 
 A secondary methodological contribution is the identification and correction of bilateral sentence-level data leakage in the SciFact train/dev split, affecting 38.4% of development rows.
 
-> **Note:** clAIm performs claim–evidence *consistency checking*, not independent fact verification. The system determines whether a supplied evidence sentence textually entails a claim — not whether the claim is factually true against world knowledge.
+> **Note:** clAIm performs claim–evidence *consistency checking*, and therefore, this is not independent fact verification. The system determines whether a supplied evidence sentence textually entails a claim more so than whether the claim is factually true against world knowledge.
 
 ---
 
@@ -164,4 +164,10 @@ Frontend (claim-ai.org · Vercel · HTML/CSS/JS)
 
 ---
 
-*BUSS305 · Korea University Business School · Minoo La · Prof. Kyuhan Lee · 2026*
+## License
+
+MIT
+
+---
+
+*Korea University Business School · Minoo La · Prof. Kyuhan Lee · 2026*
