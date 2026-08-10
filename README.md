@@ -1,4 +1,4 @@
-# clAIm — Claim AI
+# clAIm (Claim AI)
 
 **Scientific Claim–Evidence Consistency Verification via Two-Stage NLI Transfer Learning**
 
